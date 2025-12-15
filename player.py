@@ -1,6 +1,7 @@
 import random
 import pygame
 import config
+import brain
 class Player:
     def __init__(self):
         # Bird
@@ -10,9 +11,15 @@ class Player:
         self.vel = 0
         self.flap = False
         self.alive = True
+        self.lifespan = 0
 
         #AI
         self.decision = None
+        self.vision = [0.5, 1, 0.5]
+        self.fitness = 0
+        self.inputs = 3
+        self.brain = brain.Brain(self.inputs)
+        self.brain.generate_net()
     
     def draw(self, window):
         pygame.draw.rect(window, self.color, self.rect)
@@ -35,6 +42,7 @@ class Player:
                 self.vel = 5
             #if self.vel >= 3:
              #   self.flap = False
+            self.lifespan += 1
         else:
             self.alive = False
             self.flap = False
@@ -45,10 +53,34 @@ class Player:
             self.vel = -5
             #self.flap = True
         
+    @staticmethod
+    def closest_pipe():
+        for p in config.pipes:
+            if not p.passed:
+                return p
 
     # AI relted func
-
+    def look(self):
+        if config.pipes:
+            self.vision[0] = max(0, self.rect.center[1] - self.closest_pipe().top_rect.bottom) / 500
+            pygame.draw.line(config.window, self.color, self.rect.center, (self.rect.center[0], config.pipes[0].top_rect.bottom))
+            
+            self.vision[1] = max(0, self.closest_pipe().x - self.rect.center[0]) / 500
+            pygame.draw.line(config.window, self.color, self.rect.center, ( config.pipes[0].x,self.rect.center[1]))
+            
+            self.vision[2] = max(0, self.closest_pipe().bottom_rect.top - self.rect.center[1]) / 500
+            pygame.draw.line(config.window, self.color, self.rect.center, (self.rect.center[0], config.pipes[0].bottom_rect.top))
+            
     def think(self):
-        self.decision = random.uniform(0,1)
-        if self.decision > 0.73:
+        self.decision = self.brain.feed_forward(self.vision)
+        if self.decision > 0.3:
             self.bird_flap()
+
+    def calculate_fitness(self):
+        self.fitness = self.lifespan
+    def clone(self):
+        clone = Player()
+        clone.fitness = self.fitness
+        clone.brain = self.brain.clone()
+        clone.brain.generate_net()
+        return clone

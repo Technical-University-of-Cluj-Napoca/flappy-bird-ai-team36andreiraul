@@ -6,7 +6,7 @@ import population
 import player
 pygame.init()
 clock = pygame.time.Clock()
-pop = population.Population() 
+pop = population.Population(100) 
 
 
 
@@ -31,18 +31,23 @@ def quit_game():
 
             elif config.game_state == "manual":
                 if event.key == pygame.K_SPACE:
-                    pop.players.bird_flap()
+                    for p in pop.players:
+                        p.bird_flap()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
              if config.game_state == "manual":
-                pop.players.bird_flap()
+                for p in pop.players:
+                    p.bird_flap()
 
 def reset_game():
     if config.score > config.high_score:
         config.high_score = config.score
     config.score = 0
     config.pipes.clear()
-    pop.players = player.Player()
+    if config.game_state == "auto":
+        pop.players = [player.Player() for _ in range(100)]
+    elif config.game_state == "manual":
+        pop.players = [player.Player()]
 
 def draw_menu():
     config.window.fill((200, 200, 200)) 
@@ -94,16 +99,23 @@ def main():
                     config.pipes.remove(p)
             draw_score()
             if config.game_state == "manual":
-                if pop.players.alive:
-                    pop.players.update(config.ground)
-                    pop.players.draw(config.window)
-                else:
-                    reset_game()
+                if pop.players == []:
+                    pop.players = [player.Player()]
+                for p in pop.players:
+                    if p.alive:
+                        p.update(config.ground)
+                        p.draw(config.window)
+                    else:
+                        reset_game()
             
             elif config.game_state == "auto":
-                pop.update_live_players()
-                if not pop.players.alive:
-                    reset_game()
+                if not pop.extinct():
+                    pop.update_live_players()
+                else:
+                    config.pipes.clear()
+                    pop.natural_selection()
+                # if not pop.players.alive:
+                #     reset_game()
 
             clock.tick(60)
             pygame.display.flip()
