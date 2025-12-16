@@ -45,6 +45,10 @@ class Species:
 
 
     def offspring(self):
-        baby = self.players[random.randint(1,len(self.players)-1)].clone()
+        if len(self.players) == 1:
+            baby = self.players[random.randint(1,len(self.players))].clone()
+        else:
+            baby = self.players[random.randint(1,len(self.players)-1)].clone()
+
         baby.brain.mutate()
         return baby

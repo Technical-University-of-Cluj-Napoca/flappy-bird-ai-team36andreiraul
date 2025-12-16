@@ -5,9 +5,19 @@ import brain
 class Player:
     def __init__(self):
         # Bird
+        self.img_list = config.bird_imgs
+        self.img_index = 0
+        self.img = self.img_list[self.img_index]
+        self.animation_timer = 0
+
+
         self.x, self.y = 50, 200
-        self.rect = pygame.Rect(self.x, self.y, 20, 20)
-        self.color = random.randint(100,255), random.randint(100,255), random.randint(100,255)
+        if self.img:
+            self.rect = self.img.get_rect(topleft=(self.x, self.y))
+        else:
+            self.rect = pygame.Rect(self.x, self.y, 34, 24)
+        
+        self.color = (random.randint(100, 255), random.randint(100, 255), random.randint(100, 255))
         self.vel = 0
         self.flap = False
         self.alive = True
@@ -21,8 +31,17 @@ class Player:
         self.brain = brain.Brain(self.inputs)
         self.brain.generate_net()
     
+    
+
     def draw(self, window):
-        pygame.draw.rect(window, self.color, self.rect)
+        if self.img:
+
+            rotation = self.vel * -2
+            rotated_image = pygame.transform.rotate(self.img, rotation)
+            new_rect = rotated_image.get_rect(center=self.rect.center)
+            window.blit(rotated_image, new_rect.topleft)
+        else:
+            pygame.draw.rect(window, self.color, self.rect)
 
 
     def ground_collision(self,ground):
@@ -38,20 +57,38 @@ class Player:
         if not (self.ground_collision(ground) or self.pipe_collision()):
             self.vel += 0.25
             self.rect.y += self.vel
-            if self.vel > 5:
-                self.vel = 5
-            #if self.vel >= 3:
-             #   self.flap = False
+            
+            if self.vel > 8:
+                self.vel = 8
+            
             self.lifespan += 1
+            self.animate()
         else:
             self.alive = False
             self.flap = False
             self.vel = 0
+    def animate(self):
+        if not self.img:
+            return
 
+        self.animation_timer += 1
+        
+        if self.animation_timer >= 5:
+            self.animation_timer = 0
+            self.img_index += 1
+            
+            if self.img_index >= len(self.img_list):
+                self.img_index = 0
+            
+            self.img = self.img_list[self.img_index]
+            
+            self.rect = self.img.get_rect(center=self.rect.center)
+    
     def bird_flap(self):
         if not self.flap and not self.sky_collision():
-            self.vel = -5
-            #self.flap = True
+            self.vel = -6 
+            self.img_index = 0
+            self.animation_timer = 0
         
     @staticmethod
     def closest_pipe():
