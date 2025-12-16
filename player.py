@@ -60,6 +60,8 @@ class Player:
             
             if self.vel > 8:
                 self.vel = 8
+            if self.vel >= 3:
+                self.flap = False
             
             self.lifespan += 1
             self.animate()
@@ -86,9 +88,10 @@ class Player:
     
     def bird_flap(self):
         if not self.flap and not self.sky_collision():
-            self.vel = -6 
+            self.vel = -5 
             self.img_index = 0
             self.animation_timer = 0
+            self.flap = True
         
     @staticmethod
     def closest_pipe():
