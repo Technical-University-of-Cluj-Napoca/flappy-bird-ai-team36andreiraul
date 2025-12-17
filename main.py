@@ -217,9 +217,12 @@ def main():
             elif config.game_state == "auto":
                 if not pop.extinct():
                     pop.update_live_players()
+                    if config.score > config.high_score:
+                        config.high_score = config.score
                 else:
                     config.pipes.clear()
                     pop.natural_selection()
+                    config.score = 0
 
             if config.game_state == "game_over":
                 draw_game_over_screen()
